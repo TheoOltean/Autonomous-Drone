@@ -1,6 +1,8 @@
-build: i2c.o main.c
-	gcc -o build i2c.o -O3 main.c
+FLAGS = -O3 -Wall
 
-i2c.o:
-	gcc -o i2c.o -O3 -c i2c/i2c.c
+build: i2c.o main.c
+	gcc $(FLAGS) -o build i2c.o main.c
+
+i2c.o: i2c/i2c.c i2c/i2c.h
+	gcc $(FLAGS) -o i2c.o -O3 -c i2c/i2c.c
 
