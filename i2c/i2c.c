@@ -1,5 +1,9 @@
+#include <sys/ioctl.h>
+#include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <fcntl.h>
+#include <unistd.h>
+#include <stdint.h>
 
 int i2c_fd;
 typedef struct i2c_msg i2c_msg;
@@ -18,9 +22,8 @@ void i2c_close(void) {
 }
 
 int i2c_readRegister(unsigned char address, unsigned char reg, unsigned char *result) {
-    unsigned char out[1];    
-    i2c_msg messages[2];
-    messages[0] = (i2c_msg){.addr = address, .flags = 0, .len = 1, .buf = out};
+    struct i2c_msg messages[2];
+    messages[0] = (i2c_msg){.addr = address, .flags = 0, .len = 1, .buf = &reg};
     messages[1] = (i2c_msg){.addr = address, .flags = I2C_M_RD | I2C_M_NOSTART, .len = 1, .buf = result};
 
     i2c_ioctl_data transmission[1];
@@ -34,14 +37,14 @@ int i2c_readRegister(unsigned char address, unsigned char reg, unsigned char *re
 }
 
 int i2c_writeRegister(unsigned char address, unsigned char reg, unsigned char value) {
-    unsigned char out[2] = {reg, value};
+    uint8_t out[2] = {reg, value};
     i2c_msg messages[1];
     messages[0] = (i2c_msg){.addr = address, .flags = 0, .len = 2, .buf = out};
 
     i2c_ioctl_data transmission[1];
     transmission[0] = (i2c_ioctl_data){.msgs = messages, .nmsgs = 1};
 
-    if (ioctl(i2c_fd,I2C_RDW,&transmission) < 0) {
+    if (ioctl(i2c_fd,I2C_RDWR,&transmission) < 0) {
         return -1;
     }
 
