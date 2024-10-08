@@ -169,6 +169,19 @@ vec3 imu_getAccRawValues() {
     return result;
 }
 
+vec3 imu_getGyroRawValues() {
+    vec3 result;
+    result.x = ((data[6] << 8) | data[7]);
+    result.y = ((data[8] << 8) | data[9]);
+    result.z = ((data[10] << 8) | data[11]);
+    return result;
+}
+
+float imu_getTemperature() {
+    int16_t rawTemp = ((data[12] << 8) | data[13]);
+    return (rawTemp*1.0 - ICM20948_ROOM_TEMP_OFFSET)/ICM20948_T_SENSITIVITY + 21.0;
+}
+
 void imu_setAccSampleRateDivider(uint8_t value) {
     imu_setBank(2);
     i2c_writeRegister(ICM20948_ADDR, ICM20948_ACCEL_SMPLRT_DIV_1, value);
