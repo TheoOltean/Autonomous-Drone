@@ -131,6 +131,7 @@
 #define ICM20948_GYRO_RANGE            0 
 #define ICM20948_ACC_RANGE             0
 
+#define CALIB_SAMPLE_CNT               50
 imu_data state;
 uint8_t data[20];
 
@@ -146,15 +147,31 @@ int imu_init() {
     }
     imu_setBank(2);
     i2c_writeRegister(ICM20948_ADDR, ICM20948_ODR_ALIGN_EN, 1);
-    return 1;
+
+    state = (imu_data){};
+    state.accCorrFactor = (vec3){.x=1,.y=1,.z=1};
+    return 0;
 }
 
-void readData() {
+void imu_readData() {
     imu_setBank(0);
 
     for (int i = 0; i < 20; ++i) {
         i2c_readRegister(ICM20948_ADDR, ICM20948_ACCEL_OUT+i, data+i);
     }
+}
+
+vec3 imu_getAccRawValues() {
+    vec3 result;
+    result.x = ((data[0] << 8) | data[1]);
+    result.y = ((data[2] << 8) | data[3]);
+    result.z = ((data[4] << 8) | data[5]);
+    return result;
+}
+
+void imu_setAccSampleRateDivider(uint8_t value) {
+    imu_setBank(2);
+    i2c_writeRegister(ICM20948_ADDR, ICM20948_ACCEL_SMPLRT_DIV_1, value);
 }
 
 void imu_AutoOffsets() {
@@ -185,9 +202,33 @@ void imu_AutoOffsets() {
     //
     usleep(1000000);
     for (int i = 0; i < 10; ++i) {
-        readData();
+        imu_readData();
+        usleep(10000);
+    }
+    
+    state.accOffsetVal = (vec3){};
+    for (int i = 0; i < CALIB_SAMPLE_CNT; ++i) {
+        imu_readData();
+        state.accOffsetVal.x += ((data[0] << 8) | data[1]);
+        state.accOffsetVal.y += ((data[2] << 8) | data[3]);
+        state.accOffsetVal.z += ((data[4] << 8) | data[5]);
         usleep(10000);
     }
 
-    //continue from here
+    state.accOffsetVal.x /= CALIB_SAMPLE_CNT;
+    state.accOffsetVal.y /= CALIB_SAMPLE_CNT;
+    state.accOffsetVal.z /= CALIB_SAMPLE_CNT;
+
+    state.gyroOffsetVal = (vec3){};
+    for (int i = 0; i < CALIB_SAMPLE_CNT; ++i) {
+        imu_readData();
+        state.gyroOffsetVal.x += ((data[6] << 8) | data[7]);
+        state.gyroOffsetVal.y += ((data[8] << 8) | data[9]);
+        state.gyroOffsetVal.z += ((data[10] << 8) | data[11]);
+        usleep(1000);
+    }
+
+    state.gyroOffsetVal.x /= CALIB_SAMPLE_CNT;
+    state.gyroOffsetVal.y /= CALIB_SAMPLE_CNT;
+    state.gyroOffsetVal.z /= CALIB_SAMPLE_CNT;
 }

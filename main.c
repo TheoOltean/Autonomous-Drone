@@ -1,6 +1,7 @@
-#include <stdint.h>
 #include <stdio.h>
 #include "i2c/i2c.h"
+#include "drivers/IMU-ICM-20948.h"
+#include <unistd.h>
 
 int main() {
     int result;
@@ -23,12 +24,12 @@ int main() {
 //    }
     
     imu_autoOffsets();
-    imu_setAccRange(ICM20948_ACC_RANGE_2G);
-    imu_setAccDLPF(ICM20948_DLPF_6);
     imu_setAccSampleRateDivider(10);
 
     for (;;) {
-        imu_data data = imu_readSenser();
-         
+        imu_readData();
+        vec3 acc = imu_getAccRawValues();
+        printf("x: %f, y: %f, z: %f\n",acc.x,acc.y,acc.z);
+        usleep(10000);
     }
 }

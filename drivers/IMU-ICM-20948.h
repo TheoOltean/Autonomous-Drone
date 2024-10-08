@@ -18,4 +18,10 @@ typedef struct imu_data {
     float gyroRangeFactor;
 } imu_data;
 
+void imu_autoOffsets();
+void imu_setAccSampleRateDivider(unsigned char value);
+void imu_readData();
+
+vec3 imu_getAccRawValues();
+
 #endif
