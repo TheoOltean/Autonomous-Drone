@@ -19,5 +19,7 @@ void imu_setAccSampleRateDivider(unsigned char value);
 void imu_readData();
 
 vec3 imu_getAccRawValues();
+vec3 imu_getGyroRawValues();
+float imu_getTemperature();
 
 #endif
