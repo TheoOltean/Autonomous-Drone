@@ -1,4 +1,7 @@
+#include <Fusion/FusionAhrs.h>
+#include <Fusion/FusionMath.h>
 #include <stdio.h>
+#include <Fusion/Fusion.h>
 #include "i2c/i2c.h"
 #include "drivers/IMU-ICM-20948.h"
 #include <unistd.h>
@@ -10,26 +13,34 @@ int main() {
         perror("Failed to open i2c buss");
         return -1;
     }
-
-//    uint8_t value;
-//    result = i2c_readRegister(TEST_ADDR,1,&value);
-//    if (result != 0) {
-//        perror("Failed to read register from device");
-//        return -1; 
-//    }
-//    uint8_t buffer;
-//    if (i2c_readRegister(0x69, 0, &buffer)) {
-//        perror("Failed to open i2c bus");
-//        return -1;
-//    }
     
     imu_autoOffsets();
     imu_setAccSampleRateDivider(10);
+    
+    //initialize fusion
+    FusionAhrs ahrs;
+    FusionAhrsInitialise(&ahrs);
+
+    const FusionAhrsSettings settings = {
+            .convention = FusionConventionNwu,
+            .gain = 0.5f,
+            .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
+            .accelerationRejection = 10.0f,
+            .magneticRejection = 10.0f,
+            .recoveryTriggerPeriod = 5 * 1.0, /* 5 seconds */
+    };
+    FusionAhrsSetSettings(&ahrs, &settings);
 
     for (;;) {
         imu_readData();
         vec3 acc = imu_getAccRawValues();
-        printf("x: %f, y: %f, z: %f\n",acc.x,acc.y,acc.z);
-        usleep(10000);
+        vec3 gyro = imu_getGyroRawValues();
+
+        FusionAhrsUpdateNoMagnetometer(&ahrs, gyro.fusionVec, acc.fusionVec, 1.0f);
+
+        FusionEuler euler = FusionQuaternionToEuler(FusionAhrsGetQuaternion(&ahrs));
+        FusionVector earth = FusionAhrsGetEarthAcceleration(&ahrs);
+
+        printf("x: %f, y: %f, z: %f, roll: %f, pitch: %f, yaw: %f\n",earth.axis.x,earth.axis.y,earth.axis.z,euler.angle.roll,euler.angle.pitch,euler.angle.yaw);
     }
 }
