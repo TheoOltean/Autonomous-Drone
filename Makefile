@@ -1,8 +1,10 @@
 FLAGS = -O3 -Wall
 
-build: objects/i2c.o main.c
-	gcc $(FLAGS) -o build objects/i2c.o main.c
+build: objects/i2c.o objects/IMU-ICM-20948.o main.c
+	gcc $(FLAGS) -o $@ $^ -lfusion -lm
 
-objects/i2c.o: i2c/i2c.c drivers/IMU-ICM-20948.c
-	gcc $(FLAGS) -o objects/i2c.o -c -lfusion i2c/i2c.c drivers/IMU-ICM-20948.c
+objects/i2c.o: i2c/i2c.c 
+	gcc $(FLAGS) -o $@ -c $^ 
 
+objects/IMU-ICM-20948.o: drivers/IMU-ICM-20948.c
+	gcc $(FLAGS) -o $@ -c $^

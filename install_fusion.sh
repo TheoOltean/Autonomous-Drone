@@ -4,8 +4,8 @@ git clone https://github.com/xioTechnologies/Fusion.git
 
 cd Fusion/Fusion
 
-gcc -c -O3 *.c
-ar rcs libfusion.a *.o
+gcc -lm -c -O3 *.c
+ar rcsv libfusion.a *.o
 mv libfusion.a /usr/local/lib
 
 mkdir /usr/local/include/Fusion

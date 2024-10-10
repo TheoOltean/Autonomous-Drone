@@ -153,27 +153,61 @@ int imu_init() {
     return 0;
 }
 
+void imu_enableAcc() {
+    imu_setBank(0);
+    uint8_t regVal;
+    i2c_readRegister(ICM20948_ADDR, ICM20948_PWR_MGMT_2, &regVal);
+    regVal &= ~ICM20948_ACC_EN;
+    i2c_writeRegister(ICM20948_ADDR, ICM20948_PWR_MGMT_2, regVal);
+    i2c_writeRegister(ICM20948_ADDR, ICM20948_USER_CTRL, 0);
+    i2c_writeRegister(ICM20948_ADDR, ICM20948_PWR_MGMT_1, 0);
+    imu_setBank(2);
+    i2c_writeRegister(ICM20948_ADDR, ICM20948_ACCEL_SMPLRT_DIV_1, 0);
+    i2c_writeRegister(ICM20948_ADDR, ICM20948_ACCEL_SMPLRT_DIV_2, 0);
+}
+
 void imu_readData() {
     imu_setBank(0);
 
     for (int i = 0; i < 20; ++i) {
         i2c_readRegister(ICM20948_ADDR, ICM20948_ACCEL_OUT+i, data+i);
+//        printf("%d ", data[i]);
     }
+//    printf("\n");
 }
 
 vec3 imu_getAccRawValues() {
     vec3 result;
-    result.x = ((data[0] << 8) | data[1]);
-    result.y = ((data[2] << 8) | data[3]);
-    result.z = ((data[4] << 8) | data[5]);
+    result.x = (int16_t)((data[0] << 8) | data[1]);
+    result.y = (int16_t)((data[2] << 8) | data[3]);
+    result.z = (int16_t)((data[4] << 8) | data[5]);
+    return result;
+}
+
+vec3 imu_getAccCorrectedValues() {
+    vec3 result = imu_getAccRawValues();
+    result.x -= state.accOffsetVal.x;
+    result.y -= state.accOffsetVal.y;
+    result.z -= state.accOffsetVal.z;
+    result.x = 2*result.x/32768;
+    result.y = 2*result.y/32768;
+    result.z = 2*result.z/32768;
     return result;
 }
 
 vec3 imu_getGyroRawValues() {
     vec3 result;
-    result.x = ((data[6] << 8) | data[7]);
-    result.y = ((data[8] << 8) | data[9]);
-    result.z = ((data[10] << 8) | data[11]);
+    result.x = (int16_t)((data[6] << 8) | data[7]);
+    result.y = (int16_t)((data[8] << 8) | data[9]);
+    result.z = (int16_t)((data[10] << 8) | data[11]);
+    return result;
+}
+
+vec3 imu_getGyroValues() {
+    vec3 result = imu_getGyroRawValues();
+    result.x = 250*result.x/32768;
+    result.y = 250*result.y/32768;
+    result.z = 250*result.z/32768;
     return result;
 }
 
@@ -187,9 +221,7 @@ void imu_setAccSampleRateDivider(uint8_t value) {
     i2c_writeRegister(ICM20948_ADDR, ICM20948_ACCEL_SMPLRT_DIV_1, value);
 }
 
-void imu_AutoOffsets() {
-    vec3 rawAccVal;
-    vec3 rawGyrVal;
+void imu_autoOffsets() {
     imu_setBank(2);
     //setGyroDLPF(ICM20948_DLPF_6)
     uint8_t regVal;
