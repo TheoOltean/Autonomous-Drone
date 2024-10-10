@@ -24,7 +24,7 @@ int main() {
     const FusionAhrsSettings settings = {
             .convention = FusionConventionNwu,
             .gain = 0.5f,
-            .gyroscopeRange = 2000.0f, /* replace this with actual gyroscope range in degrees/s */
+            .gyroscopeRange = 250.0f,
             .accelerationRejection = 10.0f,
             .magneticRejection = 10.0f,
             .recoveryTriggerPeriod = 5 * 1.0, /* 5 seconds */
@@ -41,6 +41,6 @@ int main() {
         FusionEuler euler = FusionQuaternionToEuler(FusionAhrsGetQuaternion(&ahrs));
         FusionVector earth = FusionAhrsGetEarthAcceleration(&ahrs);
 
-        printf("x: %f, y: %f, z: %f, roll: %f, pitch: %f, yaw: %f\n",earth.axis.x,earth.axis.y,earth.axis.z,euler.angle.roll,euler.angle.pitch,euler.angle.yaw);
+        printf("accx: %f, accy: %f, accz: %f, x: %f, y: %f, z: %f, roll: %f, pitch: %f, yaw: %f\n",acc.x,acc.y,acc.z,earth.axis.x,earth.axis.y,earth.axis.z,euler.angle.roll,euler.angle.pitch,euler.angle.yaw);
     }
 }
