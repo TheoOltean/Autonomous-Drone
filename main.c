@@ -4,23 +4,19 @@
 #include <Fusion/Fusion.h>
 #include "i2c/i2c.h"
 #include "drivers/IMU-ICM-20948.h"
+#include "drivers/PWM-PCA9685.h"
 #include <unistd.h>
+#include <stdlib.h>
 
-int main() {
+void runIMU() {
     int result;
-    result = i2c_init("/dev/i2c-1");
-    if (result != 0) {
-        perror("Failed to open i2c buss");
-        return -1;
-    }
-    
     uint8_t whoami;
     i2c_readRegister(0x69,0,&whoami);
     printf("%d\n",whoami);
     result = i2c_writeRegister(0x69,15,12);
     if (result != 0) {
         perror("Failed to write i2c");
-        return -1;
+        exit(-1);
     }
     i2c_readRegister(0x69,15,&whoami);
     printf("%d\n",whoami);
@@ -61,5 +57,21 @@ int main() {
         time += 10;
     }
     fclose(outputcsv);
+}
+
+int main() {
+    int result;
+    result = i2c_init("/dev/i2c-1");
+    if (result != 0) {
+        perror("Failed to open i2c buss");
+        return -1;
+    }
+    
+    pwm_init();
+
+    pwm_setFrequency(50);
+
+    pwm_writeChannel(0,4096,0);
+
     i2c_close();
 }
