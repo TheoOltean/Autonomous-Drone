@@ -10,4 +10,6 @@ int i2c_readRegister(unsigned char address, unsigned char reg, unsigned char *re
 
 int i2c_writeRegister(unsigned char address, unsigned char reg, unsigned char value); 
 
+int i2c_getfd();
+
 #endif

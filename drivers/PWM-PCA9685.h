@@ -6,5 +6,6 @@
 void pwm_init();
 void pwm_setFrequency(float frequency);
 int pwm_writeChannel(int channel, uint16_t phaseBegin, uint16_t phaseEnd);
+int pwm_getChannel(int channel);
 
 #endif

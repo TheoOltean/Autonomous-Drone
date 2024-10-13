@@ -50,3 +50,7 @@ int i2c_writeRegister(unsigned char address, unsigned char reg, unsigned char va
 
     return 0;
 }
+
+int i2c_getfd() {
+    return i2c_fd;
+}

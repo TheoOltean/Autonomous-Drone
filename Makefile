@@ -1,7 +1,7 @@
 FLAGS = -O3 -Wall
 
 build: objects/i2c.o objects/IMU-ICM-20948.o objects/PWM-PCA9685.o main.c
-	gcc $(FLAGS) -o $@ $^ -lfusion -lm
+	gcc $(FLAGS) -pthread -o $@ $^ -lfusion -lm -llgpio -lrt
 
 objects/i2c.o: i2c/i2c.c 
 	gcc $(FLAGS) -o $@ -c $^ 

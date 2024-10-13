@@ -1,6 +1,9 @@
 #include "../i2c/i2c.h"
 #include <unistd.h>
 #include <stdint.h>
+#include <linux/i2c.h>
+#include <linux/i2c-dev.h>
+#include <sys/ioctl.h>
 
 #define PCA9685_ADDRESS                 0x40
 #define PCA9685_ADRMASK                 0x3F
@@ -88,7 +91,7 @@ enum PCA9685_PhaseBalancer {
 void pwm_init() {
     //reset
     i2c_writeRegister(PCA9685_ADDRESS,PCA9685_MODE1_REG,PCA9685_SW_RESET);
-    usleep(10);
+    usleep(1000);
 
     enum PCA9685_OutputDriverMode driverMode = PCA9685_OutputDriverMode_TotemPole;
     enum PCA9685_OutputEnabledMode enabledMode = PCA9685_OutputEnabledMode_Normal;
@@ -152,8 +155,33 @@ void pwm_setFrequency(float pwmFrequency) {
     //return result;
 }
 
+int pwm_getChannel(int channel) {
+    uint8_t reg= 4*channel + 6;
+    uint8_t address = PCA9685_ADDRESS;
+
+    struct i2c_msg messages[5];
+    union {
+        uint8_t raw[4];
+        int value;
+    } result;
+    messages[0] = (struct i2c_msg){.addr = address, .flags = 0, .len = 1, .buf = &reg};
+    messages[1] = (struct i2c_msg){.addr = address, .flags = I2C_M_RD | I2C_M_NOSTART, .len = 1, .buf = result.raw};
+    messages[2] = (struct i2c_msg){.addr = address, .flags = I2C_M_RD | I2C_M_NOSTART, .len = 1, .buf = result.raw+1};
+    messages[3] = (struct i2c_msg){.addr = address, .flags = I2C_M_RD | I2C_M_NOSTART, .len = 1, .buf = result.raw+2};
+    messages[4] = (struct i2c_msg){.addr = address, .flags = I2C_M_RD | I2C_M_NOSTART, .len = 1, .buf = result.raw+3};
+
+    struct i2c_rdwr_ioctl_data transmission[1];
+    transmission[0] = (struct i2c_rdwr_ioctl_data){.msgs = messages, .nmsgs = 5};
+
+    if (ioctl(i2c_getfd(),I2C_RDWR,&transmission) < 0) {
+        return -1;
+    }
+
+    return result.value;
+}
+
 int pwm_writeChannel(int channel, uint16_t phaseBegin, uint16_t phaseEnd) {
-    uint8_t regAddress;
+    uint8_t regAddress = 4*channel + 6;
 
     int result = 0;
     result += i2c_writeRegister(PCA9685_ADDRESS,regAddress,(uint8_t)(phaseBegin&0xFF));
