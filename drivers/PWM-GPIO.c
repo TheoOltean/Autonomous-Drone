@@ -11,7 +11,8 @@ atomic_int power2;
 atomic_int power3;
 
 void pwm_setPower(int pin, int power) {
-    if (power > 100 || power < 0) return;
+    if (power > 100) power = 100;
+    if (power < 0) power = 0;
     switch (pin) {
         case (PWM_PIN_0):
             atomic_store(&power0,power);
