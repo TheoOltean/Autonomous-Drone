@@ -52,6 +52,7 @@ void pwm_init() {
     pwm_setPower(PWM_PIN_2,0);
     pwm_setPower(PWM_PIN_3,0);
 
+    atomic_store(&handle,lgGpiochipOpen(0));
     pthread_t pwmthread0, pwmthread1, pwmthread2, pwmthread4;
     struct sched_param param;
     pthread_attr_t attr;
