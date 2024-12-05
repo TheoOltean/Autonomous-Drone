@@ -6,6 +6,8 @@
 #define PWM_PIN_2 23
 #define PWM_PIN_3 16
 
+#define PWM_MAX_POWER 100
+
 void pwm_init();
 
 void pwm_setPower(int pin, int power);

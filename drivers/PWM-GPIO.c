@@ -11,7 +11,7 @@ atomic_int power2;
 atomic_int power3;
 
 void pwm_setPower(int pin, int power) {
-    if (power > 100) power = 100;
+    if (power > PWM_MAX_POWER) power = PWM_MAX_POWER;
     if (power < 0) power = 0;
     switch (pin) {
         case (PWM_PIN_0):
@@ -40,7 +40,7 @@ void *pwm_run(int pin) {
     usleep(100000);
 
     for (;;) {
-        lgTxPwm(handle,pin,50.0,5.0+((float)atomic_load(&power)/(float)100)*5.0,PWM_FLAGS,0);
+        lgTxPwm(handle,pin,50.0,5.0+((float)atomic_load(&power)/(float)PWM_MAX_POWER)*5.0,PWM_FLAGS,0);
         usleep(20000);
     }
 
